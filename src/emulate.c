@@ -523,6 +523,23 @@ static bool do_fuse5(riscv_t *rv,
     MUST_TAIL return next->impl(rv, next, cycle, PC);
 }
 
+static bool do_fuse6(riscv_t *rv,
+                     const rv_insn_t *ir,
+                     uint64_t cycle,
+                     uint32_t PC)
+{
+    cycle += 2;
+    rv->X[ir->rd] = ir->imm;
+    rv->X[ir->rs2] = rv->X[ir->rd] - rv->X[ir->rs1];
+    PC += 8;
+    if (unlikely(RVOP_NO_NEXT(ir))) {
+        rv->csr_cycle = cycle;
+        rv->PC = PC;
+        return true;
+    }
+    const rv_insn_t *next = ir->next;
+    MUST_TAIL return next->impl(rv, next, cycle, PC);
+}
 /* clang-format off */
 static const void *dispatch_table[] = {
     /* RV32 instructions */
@@ -744,6 +761,18 @@ static void match_pattern(riscv_t *rv, block_t *block)
             case rv_insn_add:
                 if (ir->rd == next_ir->rs2 || ir->rd == next_ir->rs1) {
                     ir->opcode = rv_insn_fuse2;
+                    ir->rs2 = next_ir->rd;
+                    if (ir->rd == next_ir->rs2)
+                        ir->rs1 = next_ir->rs1;
+                    else
+                        ir->rs1 = next_ir->rs2;
+                    ir->impl = dispatch_table[ir->opcode];
+                    remove_next_nth_ir(rv, ir, block, 1);
+                }
+                break;
+            case rv_insn_sub:
+                if (ir->rd == next_ir->rs2 || ir->rd == next_ir->rs1) {
+                    ir->opcode = rv_insn_fuse6;
                     ir->rs2 = next_ir->rd;
                     if (ir->rd == next_ir->rs2)
                         ir->rs1 = next_ir->rs1;
