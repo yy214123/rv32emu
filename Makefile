@@ -7,7 +7,9 @@ BIN := $(OUT)/rv32emu
 CONFIG_FILE := $(OUT)/.config
 -include $(CONFIG_FILE)
 
-CFLAGS = -std=gnu99 -O2 -Wall -Wextra -Werror
+OPT_LEVEL ?= -O2
+
+CFLAGS = -std=gnu99 $(OPT_LEVEL) -Wall -Wextra -Werror
 CFLAGS += -Wno-unused-label
 CFLAGS += -include src/common.h -Isrc/
 
@@ -126,6 +128,10 @@ endif
 # Compressed extension instructions
 ENABLE_EXT_C ?= 1
 $(call set-feature, EXT_C)
+
+# RV32E Base Integer Instruction Set
+ENABLE_RV32E ?= 0
+$(call set-feature, RV32E)
 
 # Control and Status Register (CSR)
 ENABLE_Zicsr ?= 1

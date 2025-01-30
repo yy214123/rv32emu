@@ -58,16 +58,107 @@ jobs:
       uses: rlalik/setup-cpp-compiler@master
       with:
         compiler: ${{ matrix.compiler }}
-    - name: default build
+    - name: default build with -g
       env:
         CC: ${{ steps.install_cc.outputs.cc }}
-      run: make -j$(nproc)
+      run: make OPT_LEVEL=-g -j$(nproc)
+      if: ${{ always() }}
+    - name: default build with -Og
+      env:
+        CC: ${{ steps.install_cc.outputs.cc }}
+      run: |
+            make distclean
+            make OPT_LEVEL=-Og -j$(nproc)
+      if: ${{ always() }}
+    - name: default build with -O0
+      env:
+        CC: ${{ steps.install_cc.outputs.cc }}
+      run: |
+            make distclean
+            make OPT_LEVEL=-O0 -j$(nproc)
+      if: ${{ always() }}
+    - name: default build with -O1
+      env:
+        CC: ${{ steps.install_cc.outputs.cc }}
+      run: |
+            make distclean
+            make OPT_LEVEL=-O1 -j$(nproc)
+      if: ${{ always() }}
+    - name: default build with -O2
+      env:
+        CC: ${{ steps.install_cc.outputs.cc }}
+      run: |
+            make distclean
+            make OPT_LEVEL=-O2 -j$(nproc)
+      if: ${{ always() }}
+    - name: default build with -O3
+      env:
+        CC: ${{ steps.install_cc.outputs.cc }}
+      run: |
+            make distclean
+            make OPT_LEVEL=-O3 -j$(nproc)
+      if: ${{ always() }}
+    - name: default build with -Ofast
+      env:
+        CC: ${{ steps.install_cc.outputs.cc }}
+      run: |
+            make distclean
+            make OPT_LEVEL=-Ofast -j$(nproc)
+      if: ${{ always() }}
+    - name: default build for system emulation with -g
+      env:
+        CC: ${{ steps.install_cc.outputs.cc }}
+      run: |
+            make distclean
+            make OPT_LEVEL=-g ENABLE_SYSTEM=1 -j$(nproc)
+      if: ${{ always() }}
+    - name: default build for system emulation with -Og
+      env:
+        CC: ${{ steps.install_cc.outputs.cc }}
+      run: |
+            make distclean
+            make OPT_LEVEL=-Og ENABLE_SYSTEM=1 -j$(nproc)
+      if: ${{ always() }}
+    - name: default build for system emulation with -O0
+      env:
+        CC: ${{ steps.install_cc.outputs.cc }}
+      run: |
+            make distclean
+            make OPT_LEVEL=-O0 ENABLE_SYSTEM=1 -j$(nproc)
+      if: ${{ always() }}
+    - name: default build for system emulation with -O1
+      env:
+        CC: ${{ steps.install_cc.outputs.cc }}
+      run: |
+            make distclean
+            make OPT_LEVEL=-O1 ENABLE_SYSTEM=1 -j$(nproc)
+      if: ${{ always() }}
+    - name: default build for system emulation with -O2
+      env:
+        CC: ${{ steps.install_cc.outputs.cc }}
+      run: |
+            make distclean
+            make OPT_LEVEL=-O2 ENABLE_SYSTEM=1 -j$(nproc)
+      if: ${{ always() }}
+    - name: default build for system emulation with -O3
+      env:
+        CC: ${{ steps.install_cc.outputs.cc }}
+      run: |
+            make distclean
+            make OPT_LEVEL=-O3 ENABLE_SYSTEM=1 -j$(nproc)
+      if: ${{ always() }}
+    - name: default build for system emulation with -Ofast
+      env:
+        CC: ${{ steps.install_cc.outputs.cc }}
+      run: |
+            make distclean
+            make OPT_LEVEL=-Ofast ENABLE_SYSTEM=1 -j$(nproc)
       if: ${{ always() }}
     - name: check + tests
       env:
         CC: ${{ steps.install_cc.outputs.cc }}
       run: |
-            make clean
+            make distclean
             make check -j$(nproc)
             make tests -j$(nproc)
             make misalign -j$(nproc)
@@ -152,16 +243,18 @@ jobs:
       uses: actions/checkout@v4
     - name: build artifact
       # The GitHub Action for non-x86 CPU
-      # https://github.com/uraimo/run-on-arch-action
-      uses: uraimo/run-on-arch-action@v2
+      uses: allinurl/run-on-arch-action@master
+      # FIXME: gcc build fails on Aarch64/Linux hosts
+      env:
+        CC: clang
       with:
-        arch: none
-        distro: none
-        base_image: "--platform=linux/arm64 arm64v8/ubuntu:22.04"
+        arch: aarch64
+        distro: ubuntu24.04
         # No 'sudo' is available
         install: |
           apt-get update -q -y
-          apt-get install -q -y git build-essential libsdl2-dev libsdl2-mixer-dev lsb-release wget software-properties-common gnupg bc
+          apt-get dist-upgrade -q -y
+          apt-get install -q -y make git clang libsdl2-dev libsdl2-mixer-dev lsb-release wget software-properties-common gnupg bc
           git config --global --add safe.directory ${{ github.workspace }}
           git config --global --add safe.directory ${{ github.workspace }}/src/softfloat
           git config --global --add safe.directory ${{ github.workspace }}/src/mini-gdbstub
